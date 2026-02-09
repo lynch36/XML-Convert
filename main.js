@@ -187,11 +187,11 @@ function exportToExcel() {
         return;
     }
 
-    // Preparamos los datos para Excel
     const generales = datosFactura.generales;
     const emisor = datosFactura.emisor;
     const receptor = datosFactura.receptor;
     const conceptos = datosFactura.conceptos;
+    const cartaPorte = datosFactura.cartaPorte;
 
     // Hoja 1: Datos generales
     const hojaGenerales = [
@@ -223,13 +223,40 @@ function exportToExcel() {
         ])
     ];
 
+    // Hoja 4: Carta Porte (si existe)
+    let hojaCartaPorte = null;
+    if (cartaPorte) {
+        hojaCartaPorte = [
+            ["Este archivo contiene complemento Carta Porte"],
+            ["Campo", "Valor"],
+            ["Versión", cartaPorte.version],
+            ["Total Distancia Recorrida", cartaPorte.totalDistRec],
+            [],
+            ["Ubicaciones:"],
+            ["Tipo", "RFC", "Nombre", "Fecha/Hora"],
+            ...cartaPorte.ubicaciones.map(u => [
+                u.tipo, u.rfc, u.nombre, u.fechaHora
+            ]),
+            [],
+            ["Mercancías:"],
+            ["Descripción", "Cantidad", "Clave"],
+            ...cartaPorte.mercancias.map(m => [
+                m.descripcion, m.cantidad, m.clave
+            ])
+        ];
+    } else {
+        hojaCartaPorte = [
+            ["Este archivo NO contiene complemento Carta Porte"]
+        ];
+    }
+
     // Crear libro y hojas
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hojaGenerales), "Generales");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hojaEmisorReceptor), "Emisor y Receptor");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hojaConceptos), "Conceptos");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hojaCartaPorte), "Carta Porte");
 
-    // Descargar archivo
     XLSX.writeFile(wb, "factura_cfdi.xlsx");
 }
 
